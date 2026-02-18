@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بنك أسئلة الأمراض السارية والمزمنة</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background-color: #f0f4f8;
+        }
+        .option-btn {
+            transition: all 0.3s ease;
+        }
+        .option-btn:hover:not(:disabled) {
+            transform: translateX(-5px);
+            background-color: #e0f2fe;
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+    </style>
+</head>
+<body class="text-slate-800 min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-teal-700 text-white shadow-lg sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <i class="fa-solid fa-notes-medical text-3xl"></i>
+                <div>
+                    <h1 class="text-xl font-bold">بنك أسئلة الأمراض السارية</h1>
+                    <p class="text-xs text-teal-100">مراجعة شاملة للمقرر</p>
+                </div>
+            </div>
+            <div class="hidden md:block text-sm font-medium bg-teal-800 px-3 py-1 rounded-full">
+                إصدار الطالب
+            </div>
+        </div>
+    </header>
+
+    <div class="flex flex-1 container mx-auto px-4 py-8 gap-6 flex-col lg:flex-row">
+        
+        <!-- Sidebar / Categories -->
+        <aside class="w-full lg:w-1/4 flex flex-col gap-4">
+            <div class="bg-white rounded-xl shadow-md p-4 sticky top-24">
+                <h2 class="text-lg font-bold mb-4 text-slate-700 border-b pb-2">أقسام المقرر</h2>
+                <div id="category-list" class="flex flex-col gap-2 max-h-60 lg:max-h-[calc(100vh-200px)] overflow-y-auto">
+                    <!-- Categories will be injected here -->
+                </div>
+                
+                <div class="mt-6 p-4 bg-teal-50 rounded-lg border border-teal-100">
+                    <h3 class="font-bold text-teal-800 text-sm mb-2">إحصائياتك</h3>
+                    <div class="flex justify-between text-sm mb-1">
+                        <span>الإجابات الصحيحة:</span>
+                        <span id="total-score" class="font-bold text-teal-600">0</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-200 mt-2">
+                        <div id="total-progress" class="bg-teal-600 h-2.5 rounded-full" style="width: 0%"></div>
+                    </div>
+                </div>
+                <button onclick="resetQuiz()" class="mt-4 w-full py-2 text-sm text-red-500 hover:bg-red-50 rounded transition-colors">
+                    <i class="fa-solid fa-rotate-right ml-2"></i> إعادة البدء
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Quiz Area -->
+        <main class="w-full lg:w-3/4">
+            <div id="quiz-container" class="bg-white rounded-2xl shadow-lg p-6 md:p-10 min-h-[500px] relative">
+                
+                <!-- Progress Header -->
+                <div class="flex justify-between items-center mb-6 text-sm text-slate-500">
+                    <span id="category-badge" class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full font-bold text-xs">عام</span>
+                    <span>سؤال <span id="current-q-num">1</span> من <span id="total-q-num">10</span></span>
+                </div>
+
+                <!-- Question Text -->
+                <div class="mb-8">
+                    <h2 id="question-text" class="text-2xl md:text-3xl font-bold text-slate-800 leading-relaxed">
+                        جاري تحميل السؤال...
+                    </h2>
+                </div>
+
+                <!-- Options Grid -->
+                <div id="options-container" class="grid gap-4 mb-8">
+                    <!-- Options injected here -->
+                </div>
+
+                <!-- Feedback Section (Hidden initially) -->
+                <div id="feedback-section" class="hidden fade-in bg-slate-50 border-r-4 border-slate-300 p-5 rounded-lg mb-6">
+                    <h3 id="feedback-title" class="font-bold text-lg mb-2"></h3>
+                    <p id="feedback-text" class="text-slate-600 leading-relaxed"></p>
+                </div>
+
+                <!-- Navigation Controls -->
+                <div class="flex justify-between items-center mt-auto pt-6 border-t">
+                    <button id="prev-btn" onclick="prevQuestion()" class="px-6 py-2 rounded-lg text-slate-500 hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition">
+                        <i class="fa-solid fa-arrow-right ml-2"></i> السابق
+                    </button>
+                    <button id="next-btn" onclick="nextQuestion()" class="bg-teal-600 text-white px-8 py-3 rounded-lg hover:bg-teal-700 shadow-lg shadow-teal-200 disabled:opacity-50 disabled:cursor-not-allowed transition transform hover:-translate-y-1">
+                        السؤال التالي <i class="fa-solid fa-arrow-left mr-2"></i>
+                    </button>
+                </div>
+
+            </div>
+
+            <!-- Completion Screen (Hidden) -->
+            <div id="completion-screen" class="hidden bg-white rounded-2xl shadow-lg p-10 text-center fade-in">
+                <div class="w-24 h-24 bg-teal-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fa-solid fa-trophy text-4xl text-teal-600"></i>
+                </div>
+                <h2 class="text-3xl font-bold text-slate-800 mb-2">أحسنت!</h2>
+                <p class="text-slate-500 mb-8">لقد أكملت جميع الأسئلة في هذا القسم.</p>
+                
+                <div class="flex justify-center gap-4">
+                    <div class="bg-slate-50 p-4 rounded-xl w-32">
+                        <span class="block text-slate-400 text-sm mb-1">النتيجة</span>
+                        <span id="final-score" class="text-2xl font-bold text-teal-600">0/0</span>
+                    </div>
+                </div>
+
+                <div class="mt-10 flex flex-col md:flex-row gap-4 justify-center">
+                    <button onclick="changeCategory(currentCategoryIndex + 1)" id="next-cat-btn" class="bg-teal-600 text-white px-6 py-3 rounded-lg hover:bg-teal-700 transition shadow-md">
+                        الانتقال للقسم التالي
+                    </button>
+                    <button onclick="resetCategory()" class="bg-white border border-slate-300 text-slate-600 px-6 py-3 rounded-lg hover:bg-slate-50 transition">
+                        إعادة هذا القسم
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // --- Data Source ---
+        const questionsData = [
+            {
+                title: "أساسيات العدوى",
+                icon: "fa-virus",
+                questions: [
+                    {
+                        text: "أي من العناصر التالية **ليس** جزءاً من سلسلة العدوى؟",
+                        options: ["المستودع", "المناعة الطبيعية", "مخرج العدوى", "العامل المعدي"],
+                        correct: 1,
+                        explanation: "سلسلة العدوى تتطلب: عامل معدي، مستودع، مخرج، وسيلة انتقال، مدخل، وثوي قابل للإصابة. المناعة هي وسيلة دفاع وليست جزءاً من السلسلة."
+                    },
+                    {
+                        text: "الشخص الذي يحمل العامل المعدي وينقله للآخرين دون ظهور أعراض مرضية عليه يسمى:",
+                        options: ["المضيف الوسيط", "الحامل (Carrier)", "المصاب السريري", "المتلقي"],
+                        correct: 1,
+                        explanation: "الحامل هو شخص يحوي العامل الممرض دون أعراض، وقد يكون حاملاً صحياً، حاضناً، ناقهاً أو مزمناً."
+                    },
+                    {
+                        text: "المناعة التي يكتسبها الجسم نتيجة أخذ اللقاح تعتبر مناعة:",
+                        options: ["منفعلة طبيعية", "فاعلة صناعية", "فاعلة طبيعية", "منفعلة صناعية"],
+                        correct: 1,
+                        explanation: "اللقاح يحفز الجسم لإنتاج أضداد، لذا فهي 'فاعلة'، ولأنها عبر تدخل طبي فهي 'صناعية'."
+                    }
+                ]
+            },
+            {
+                title: "الأمراض التنفسية",
+                icon: "fa-lungs-virus",
+                questions: [
+                    {
+                        text: "تظهر 'بقع كوبليك' (Koplik spots) البيضاء داخل الفم كعلامة مميزة لمرض:",
+                        options: ["الحصبة (Measles)", "النكاف", "الحصبة الألمانية", "الإنفلونزا"],
+                        correct: 0,
+                        explanation: "بقع كوبليك هي علامة واصمة للحصبة تظهر قبل الطفح الجلدي."
+                    },
+                    {
+                        text: "تكمن الخطورة الكبرى للحصبة الألمانية (Rubella) عند إصابة:",
+                        options: ["كبار السن", "الأطفال الرضع", "المرأة الحامل", "مرضى الربو"],
+                        correct: 2,
+                        explanation: "الحصبة الألمانية تسبب تشوهات جنينية خطيرة (العمى، الصمم، القلب) إذا أصابت الحامل في الثلث الأول."
+                    },
+                    {
+                        text: "ما هي فترة العلاج القياسية لمرض السل الرئوي (TB)؟",
+                        options: ["أسبوع واحد", "شهر واحد", "6-9 أشهر", "مدى الحياة"],
+                        correct: 2,
+                        explanation: "علاج السل يتطلب فترة طويلة (6-9 أشهر) باستخدام مشاركة دوائية لضمان القضاء على المتفطرات ومنع المقاومة."
+                    },
+                    {
+                        text: "علامة 'صيابة النقرة' (تصلب الرقبة) تشير غالباً للإصابة بـ:",
+                        options: ["التهاب السحايا", "التهاب اللوزتين", "ذات الرئة", "الكزاز"],
+                        correct: 0,
+                        explanation: "صيابة النقرة وعلامتا كيرنغ وبروذنسكي هي العلامات السريرية الكلاسيكية لتخريش السحايا."
+                    }
+                ]
+            },
+            {
+                title: "أمراض جهاز الهضم",
+                icon: "fa-utensils",
+                questions: [
+                    {
+                        text: "يتميز مرض الكوليرا بعرض سريري مميز هو:",
+                        options: ["إسهال مدمى", "إسهال مائي (براق ماء الأرز)", "إمساك شديد", "طفح جلدي"],
+                        correct: 1,
+                        explanation: "الكوليرا تسبب إسهالاً غزيراً جداً يشبه ماء الأرز يؤدي لتجفاف سريع."
+                    },
+                    {
+                        text: "اختبار 'فيدال' (Widal test) يستخدم لتشخيص:",
+                        options: ["الكوليرا", "شلل الأطفال", "الحمى التيفية", "التهاب الكبد A"],
+                        correct: 2,
+                        explanation: "تفاعل فيدال هو اختبار مصلي يستخدم للكشف عن الأجسام المضادة للسالمونيلا المسببة للتيفية."
+                    },
+                    {
+                        text: "أي من أنواع التهاب الكبد التالية ينتقل بالطريق الفموي-البرازي؟",
+                        options: ["B و C", "A و E", "B و D", "C فقط"],
+                        correct: 1,
+                        explanation: "التهاب الكبد A و E ينتقلان عبر الطعام والماء الملوث، بينما B و C و D عن طريق الدم وسوائل الجسم."
+                    }
+                ]
+            },
+            {
+                title: "نواقل وأمراض جلدية",
+                icon: "fa-mosquito",
+                questions: [
+                    {
+                        text: "الحشرة الناقلة لداء الليشمانيا (حبة حلب) هي:",
+                        options: ["بعوضة الأنوفيلة", "ذباب الرمل", "القمل", "البراغيث"],
+                        correct: 1,
+                        explanation: "تنتقل الليشمانيا عن طريق لدغة أنثى ذباب الرمل المصابة."
+                    },
+                    {
+                        text: "العلاج الوحيد للنجاة بعد التعرض لعضة حيوان مصاب بداء الكَلَب (Rabies) هو:",
+                        options: ["المضادات الحيوية الفورية", "المراقبة فقط", "اللقاح والمصل الفوري", "غسيل المعدة"],
+                        correct: 2,
+                        explanation: "داء الكلب قاتل بنسبة 100% تقريباً بعد ظهور الأعراض، والحل الوحيد هو الوقاية الفورية بعد العضة (Post-exposure prophylaxis)."
+                    },
+                    {
+                        text: "مرض يتميز بحكة ليلية شديدة وتسببه سوسة تحفر أنفاقاً في الجلد:",
+                        options: ["الجرب", "القمل", "الأكزيما", "الصدفية"],
+                        correct: 0,
+                        explanation: "الجرب تسببه سوسة الجرب (Sarcoptes scabiei) وتتميز الحكة بأنها تشتد ليلاً."
+                    }
+                ]
+            },
+            {
+                title: "الأمراض المزمنة وضبط العدوى",
+                icon: "fa-heart-pulse",
+                questions: [
+                    {
+                        text: "داء السكري من النمط الأول (Type 1) يعالج حصراً بـ:",
+                        options: ["الحمية الغذائية فقط", "حبوب الميتفورمين", "الإنسولين", "الرياضة"],
+                        correct: 2,
+                        explanation: "في النمط الأول، يتوقف البنكرياس تماماً عن إنتاج الإنسولين، لذا يجب تعويضه حقناً."
+                    },
+                    {
+                        text: "أي مما يلي يُعتبر ضغطاً دموياً طبيعياً؟",
+                        options: ["135/85", "أقل من 120/80", "150/90", "160/100"],
+                        correct: 1,
+                        explanation: "الضغط الطبيعي المثالي هو أقل من 120 للانقباضي وأقل من 80 للانبساطي."
+                    },
+                    {
+                        text: "عدد 'لحظات نظافة اليدين' حسب منظمة الصحة العالمية هو:",
+                        options: ["3 لحظات", "5 لحظات", "7 لحظات", "لحظة واحدة"],
+                        correct: 1,
+                        explanation: "اللحظات الخمس: قبل لمس المريض، قبل إجراء نظيف، بعد التعرض لسوائل، بعد لمس المريض، بعد لمس محيط المريض."
+                    }
+                ]
+            }
+        ];
+
+        // --- State Variables ---
+        let currentCategoryIndex = 0;
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let totalQuestionsAnswered = 0;
+        let categoryScores = {}; // To track score per category
+
+        // --- DOM Elements ---
+        const categoryListEl = document.getElementById('category-list');
+        const questionTextEl = document.getElementById('question-text');
+        const optionsContainerEl = document.getElementById('options-container');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const currentQNumEl = document.getElementById('current-q-num');
+        const totalQNumEl = document.getElementById('total-q-num');
+        const categoryBadgeEl = document.getElementById('category-badge');
+        const feedbackSection = document.getElementById('feedback-section');
+        const feedbackTitle = document.getElementById('feedback-title');
+        const feedbackText = document.getElementById('feedback-text');
+        const quizContainer = document.getElementById('quiz-container');
+        const completionScreen = document.getElementById('completion-screen');
+        const totalProgressEl = document.getElementById('total-progress');
+        const totalScoreEl = document.getElementById('total-score');
+        const nextCatBtn = document.getElementById('next-cat-btn');
+
+        // --- Initialization ---
+        function init() {
+            renderCategories();
+            loadQuestion();
+            updateTotalStats();
+        }
+
+        // --- Render Categories Sidebar ---
+        function renderCategories() {
+            categoryListEl.innerHTML = '';
+            questionsData.forEach((cat, index) => {
+                const btn = document.createElement('button');
+                const isActive = index === currentCategoryIndex;
+                btn.className = `w-full text-right px-4 py-3 rounded-lg flex items-center justify-between transition-colors ${
+                    isActive ? 'bg-teal-600 text-white shadow-md' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
+                }`;
+                btn.onclick = () => changeCategory(index);
+                btn.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <i class="fa-solid ${cat.icon} w-6 text-center"></i>
+                        <span class="font-medium">${cat.title}</span>
+                    </div>
+                    ${isActive ? '<i class="fa-solid fa-chevron-left text-xs"></i>' : ''}
+                `;
+                categoryListEl.appendChild(btn);
+            });
+        }
+
+        // --- Core Quiz Logic ---
+        function changeCategory(index) {
+            if (index >= questionsData.length) return; // No more categories
+            
+            currentCategoryIndex = index;
+            currentQuestionIndex = 0;
+            
+            // UI Reset
+            quizContainer.classList.remove('hidden');
+            completionScreen.classList.add('hidden');
+            
+            renderCategories();
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            const cat = questionsData[currentCategoryIndex];
+            const q = cat.questions[currentQuestionIndex];
+
+            // Update Header Info
+            categoryBadgeEl.textContent = cat.title;
+            currentQNumEl.textContent = currentQuestionIndex + 1;
+            totalQNumEl.textContent = cat.questions.length;
+
+            // Animate Text
+            questionTextEl.style.opacity = 0;
+            setTimeout(() => {
+                questionTextEl.textContent = q.text;
+                questionTextEl.style.opacity = 1;
+            }, 200);
+            questionTextEl.style.transition = 'opacity 0.3s';
+
+            // Reset Options & Feedback
+            optionsContainerEl.innerHTML = '';
+            feedbackSection.classList.add('hidden');
+            nextBtn.disabled = true; // Disable "Next" until answered
+            prevBtn.disabled = currentQuestionIndex === 0;
+
+            // Generate Options
+            q.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "option-btn w-full text-right p-4 rounded-xl border-2 border-slate-200 bg-white text-slate-700 font-medium text-lg relative group";
+                btn.innerHTML = `
+                    <div class="flex items-center">
+                        <span class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center ml-3 font-bold group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors">${String.fromCharCode(65 + idx)}</span>
+                        ${opt}
+                    </div>
+                `;
+                btn.onclick = () => handleAnswer(idx, q.correct, q.explanation, btn);
+                optionsContainerEl.appendChild(btn);
+            });
+        }
+
+        function handleAnswer(selectedIndex, correctIndex, explanation, btnElement) {
+            // Disable all buttons
+            const allBtns = optionsContainerEl.querySelectorAll('button');
+            allBtns.forEach(b => b.disabled = true);
+
+            const isCorrect = selectedIndex === correctIndex;
+
+            // Visual Feedback
+            if (isCorrect) {
+                btnElement.classList.remove('border-slate-200', 'bg-white');
+                btnElement.classList.add('border-teal-500', 'bg-teal-50', 'text-teal-800');
+                btnElement.querySelector('span').classList.add('bg-teal-200', 'text-teal-800');
+                
+                score++;
+                
+                feedbackTitle.innerHTML = '<i class="fa-solid fa-check-circle text-teal-500 ml-2"></i> إجابة صحيحة!';
+                feedbackTitle.className = "font-bold text-lg mb-2 text-teal-700";
+                feedbackSection.classList.remove('border-red-300');
+                feedbackSection.classList.add('border-teal-300');
+            } else {
+                btnElement.classList.remove('border-slate-200', 'bg-white');
+                btnElement.classList.add('border-red-400', 'bg-red-50', 'text-red-800');
+                btnElement.querySelector('span').classList.add('bg-red-200', 'text-red-800');
+
+                // Highlight correct answer
+                const correctBtn = allBtns[correctIndex];
+                correctBtn.classList.remove('border-slate-200', 'bg-white');
+                correctBtn.classList.add('border-teal-500', 'bg-teal-50', 'text-teal-800');
+                
+                feedbackTitle.innerHTML = '<i class="fa-solid fa-circle-xmark text-red-500 ml-2"></i> إجابة خاطئة';
+                feedbackTitle.className = "font-bold text-lg mb-2 text-red-700";
+                feedbackSection.classList.remove('border-teal-300');
+                feedbackSection.classList.add('border-red-300');
+            }
+
+            // Show Feedback Section
+            feedbackText.textContent = explanation;
+            feedbackSection.classList.remove('hidden');
+            
+            // Enable Next Button
+            nextBtn.disabled = false;
+            
+            // Update Stats
+            updateTotalStats();
+        }
+
+        function nextQuestion() {
+            const cat = questionsData[currentCategoryIndex];
+            
+            if (currentQuestionIndex < cat.questions.length - 1) {
+                currentQuestionIndex++;
+                loadQuestion();
+            } else {
+                showCompletionScreen();
+            }
+        }
+
+        function prevQuestion() {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                // Note: Logic for revisiting previous questions is complex with scoring. 
+                // For simplicity in this demo, we just reload the question state (resetting answer).
+                // In a full app, you'd store the user's state per question.
+                loadQuestion();
+                // Decrement score if we want to force re-answer (or handle state properly)
+                // Here we just reload fresh for simplicity.
+            }
+        }
+
+        function showCompletionScreen() {
+            quizContainer.classList.add('hidden');
+            completionScreen.classList.remove('hidden');
+            
+            const cat = questionsData[currentCategoryIndex];
+            const finalScoreEl = document.getElementById('final-score');
+            
+            // Simple logic: we don't track per-category score strictly in vars above for display
+            // but for the sake of the UI:
+            finalScoreEl.textContent = `${score} / ${calculateTotalQuestions()}`; // Showing total accumulated score
+            
+            // Check if last category
+            if (currentCategoryIndex === questionsData.length - 1) {
+                nextCatBtn.style.display = 'none';
+                completionScreen.querySelector('h2').textContent = "أنهيت المقرر كاملاً!";
+                completionScreen.querySelector('p').textContent = "لقد أتممت مراجعة كافة أقسام المادة.";
+            } else {
+                nextCatBtn.style.display = 'inline-block';
+            }
+        }
+
+        function resetCategory() {
+            currentQuestionIndex = 0;
+            quizContainer.classList.remove('hidden');
+            completionScreen.classList.add('hidden');
+            loadQuestion();
+        }
+
+        function resetQuiz() {
+            currentCategoryIndex = 0;
+            currentQuestionIndex = 0;
+            score = 0;
+            renderCategories();
+            changeCategory(0);
+            updateTotalStats();
+        }
+
+        // --- Helper Functions ---
+        function calculateTotalQuestions() {
+            return questionsData.reduce((acc, cat) => acc + cat.questions.length, 0);
+        }
+
+        function updateTotalStats() {
+            const totalQs = calculateTotalQuestions();
+            totalScoreEl.textContent = score;
+            const percentage = (score / totalQs) * 100; // This is illustrative, normally based on answered count
+            // Let's make progress bar based on Answered Questions vs Total
+            // For simplicity, we just animate based on score/total potential.
+            // Better UX: Show percentage of current progress.
+            totalProgressEl.style.width = `${(score / (totalQs || 1)) * 100}%`;
+        }
+
+        // Start App
+        init();
+
+    </script>
+</body>
+</html>
+
